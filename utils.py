@@ -1,4 +1,5 @@
 import os
+import csv
 import logging
 import numpy as np
 import torch
@@ -591,7 +592,9 @@ def compute_accuracy(model, dataloader, get_confusion_matrix=False, moon_model=F
     else:
         dataloader = [dataloader]
 
-    correct, total = 0, 0
+    criterion = nn.NLLLoss().to(device)
+
+    correct, total, sum_loss = 0, 0, 0.0
     with torch.no_grad():
         for tmp in dataloader:
             for batch_idx, (x, target) in enumerate(tmp):
@@ -601,6 +604,9 @@ def compute_accuracy(model, dataloader, get_confusion_matrix=False, moon_model=F
                 else:
                     out = model(x)
                 _, pred_label = torch.max(out.data, 1)
+
+                batch_loss = criterion(out, target)
+                sum_loss += batch_loss.item()
 
                 total += x.data.size()[0]
                 correct += (pred_label == target.data).sum().item()
@@ -619,9 +625,9 @@ def compute_accuracy(model, dataloader, get_confusion_matrix=False, moon_model=F
         model.train()
 
     if get_confusion_matrix:
-        return correct/float(total), conf_matrix
+        return correct/float(total), conf_matrix, sum_loss/len(dataloader)
 
-    return correct/float(total)
+    return correct/float(total), sum_loss/len(dataloader)
 
 
 def save_model(model, model_index, args):
@@ -849,5 +855,18 @@ def noise_sample(choice, n_dis_c, dis_c_dim, n_con_c, n_z, batch_size, device):
         noise = torch.cat((noise, con_c), dim=1)
 
     return noise, idx
+
+def to_csv(iterable, filename):
+    with open(filename, 'a') as f:
+        writer1 = csv.writer(f)
+        writer1.writerow(iterable)
+
+def stringify_args(args):
+    arg_pairs = []
+    for arg_name in vars(args):
+        arg_value = getattr(args, arg_name)
+        arg_pairs.append(f"{arg_name}={arg_value}")
+    return "_".join(arg_pairs)
+
 
 
