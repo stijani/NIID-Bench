@@ -77,13 +77,11 @@ def plot_metrics(metric_file,
         df = filter_df(df, plot_selected_cols)
         
     x_axis = range(len(df))
-    fig, ax = plt.subplots(figsize=figsize)  # Create a figure and axis
+    fig, ax = plt.subplots(figsize=figsize)
     
     for col in df.columns:
         ax.plot(x_axis, df[col], label=col)
-        #print("###########", list(df[col]))
         print(f"{col}: {max(df[col])}, {mean(df[col])}")
-        #print(f"{col}: {max(df[col])}, {mean(df[col])}")
         
     # plot annotations
     ax.set_xlabel(xlabel, fontsize=fontsize, fontweight='bold')
@@ -100,15 +98,51 @@ def plot_metrics(metric_file,
     
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
+
     
-    plt.show()
-    return None
+def plot_hist(metric_file, save_path):
+    """plot the histograme for the maximum and average values for 
+    a targeted metric for each experiment in an experiment category
+    """
+    df = results_in_df(metric_file, None)
+    max_values, avg_values = {}, {}
+    for col in df.columns:
+        max_values[col] = max(df[col])
+        avg_values[col] = mean(df[col])
+
+    keys = list(max_values.keys())
+
+    # set the group spacing for the bars and bar width
+    group_spacing = bar_width = 1.0
+
+    # set positions for the bars
+    x = np.arange(len(keys)) * (2 * bar_width + group_spacing)
+
+    # intialize the subplots
+    fig, ax = plt.subplots()
+
+    for i, key in enumerate(keys):
+        max_data = max_values[key]
+        average_data = avg_values[key]
+        max_bars = ax.bar(x[i] - bar_width/2, max_data, bar_width)
+        average_bars = ax.bar(x[i] + bar_width/2, average_data, bar_width)
+
+    # set labels
+    ax.set_xlabel('Keys')
+    ax.set_ylabel('Values')
+    ax.set_title('Max and Average Values')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(keys, rotation=45, ha='right')
+    ax.legend()
+    plt.savefig(args.save_path_hist, bbox_inches='tight')
 
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--metric_filename', type=str, default='./test_acc.csv', help='path to the targeted metric file')
     parser.add_argument('--save_path', type=str, default='./', help='where to save the plot')
+    parser.add_argument('--save_path_hist', type=str, default='./', help='where to save the histogram plot')
     parser.add_argument('--ylabel', type=str, default='Test Accuracy', help='label for the y-axis')
     parser.add_argument('--xlabel', type=str, default='Communication Rounds', help='label for the x-axis')
     parser.add_argument('--plot_title', type=str, default='Add a custom title', help='title of the plot')
@@ -122,6 +156,7 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
+    plot_hist(args.metric_filename, args.save_path_hist)
     plot_metrics(args.metric_filename, 
                  window_size=args.window_size, 
                  plot_title=args.plot_title, 
