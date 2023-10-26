@@ -683,4 +683,30 @@ class ModelFedCon_noheader(nn.Module):
 
         y = self.l3(h)
         return h, h, y
+    
+
+
+class LeNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 20, 5)
+        self.conv2 = nn.Conv2d(20, 50, 5)
+
+        self.fc1 = nn.Linear(in_features=50 * 5 * 5, out_features=500)
+        self.out = nn.Linear(in_features=500, out_features=10) # cifar10, mnist
+        #self.out = nn.Linear(in_features=500, out_features=100) # cifar100
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
+
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
+
+        x = x.flatten(start_dim=1)
+        x = F.relu(self.fc1(x))
+        x = self.out(x)
+        #x = F.log_softmax(x, dim=1)
+
+        return x
 
