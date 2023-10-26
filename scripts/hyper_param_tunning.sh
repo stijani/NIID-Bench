@@ -1,10 +1,11 @@
-for beta_ in 0.99
+#for beta_ in 0.1 0.3 0.5 0.7 0.9 0.99
+for beta_ in 0.3 0.1 0.5
 do
-	for num_local_steps in 150
+	for num_local_steps in 150 500 100 50
 	do
 		python experiments.py \
-            --exp_category hyper-tunning/gradiance/cifar10/beta_vs_num_local_steps \
-            --device 'cuda:4' \
+            --exp_category hyper-tunning/gradiance/cifar10/noniid-#label3/beta_vs_num_local_steps_100_clients \
+            --device 'cuda:7' \
             --alg gradiance \
             --model simple-cnn \
             --dataset cifar10 \
@@ -15,12 +16,12 @@ do
             --n_parties 10 \
             --mu 0.01 \
             --rho 0.9 \
-            --comm_round 100 \
-            --partition homo\
+            --comm_round 50 \
+            --partition noniid-#label3 \
             --beta 0.5 \
             --logdir './logs/' \
             --noise 0 \
-            --sample 1 \
+            --sample 0.1 \
             --init_seed 0 \
             --exp_title "beta: $beta_ num_local_steps: $num_local_steps"
 	done

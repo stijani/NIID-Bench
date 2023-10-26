@@ -41,8 +41,8 @@ def global_train_net_gradiance(
             noise_level = args.noise / (args.n_parties - 1) * net_id
             train_dl_local, test_dl_local, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32, dataidxs, noise_level)
             # get dataloader for the unbiased step
-            unbiased_train_dl_local, _, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32, dataidxs, noise_level)
-        train_dl_global, test_dl_global, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 1024)
+            unbiased_train_dl_local, _, _, _ = get_dataloader(args.dataset, args.datadir, 1024, 32, dataidxs, noise_level)
+        # train_dl_global, test_dl_global, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 1024)
 
         unbiased_grad_dict = local_train_net_gradiance(net_id, net, global_model, train_dl_local, test_dl, unbiased_train_dl_local, args.num_local_steps, args.lr, args.optimizer, args.mu, args.beta_, aggregated_unbiased_grads, logger, device=device)
         all_clients_unbiased_step_grads.append(unbiased_grad_dict)

@@ -15,6 +15,7 @@ class GradianceOptimizer(optim.Optimizer):
                 if p.grad is not None:
                     # perform gradiance step
                     p.grad.data = self.beta * self.prior_grads[idx] + p.grad.data
+                    # p.grad.data = self.beta * self.prior_grads[idx] + (1 - self.beta) * p.grad.data
                     # p.grad.data = self.beta * self.prior_grads[param_name] + (1 - beta) * p.grad.data
                     
                     # update model weights

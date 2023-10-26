@@ -1,30 +1,38 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
 n_parties=100
-device="cuda:4"
+device="cuda:2"
 sample=0.1
-for alg in "fedavg" "fedprox" "gradiance" "scaffold" "moon"
+partition="noniid-#label3"
+model="simple-cnn"
+#model="resnet"
+dataset="cifar10"
+num_local_steps=150
+# "gradiance" "fedprox" "fedavg" "scaffold" "moon"
+# --exp_category benchmarking/cifar10/$partition/clients_$n_parties \
+
+for alg in "gradiance"
 do
     python experiments.py \
-        --exp_category benchmarking/cifar10/homo/clients_10 \
+        --exp_category benchmarking/cifar10/noniid-#label3/clients_100 \
         --device $device \
         --alg $alg \
-        --model simple-cnn \
-        --dataset cifar10 \
+        --model $model \
+        --dataset $dataset \
         --lr 0.01 \
         --beta_ 0.9 \
         --batch-size 64 \
-        --num_local_steps 150 \
+        --num_local_steps $num_local_steps \
         --n_parties $n_parties \
         --mu 0.01 \
         --rho 0.9 \
         --comm_round 200 \
-        --partition homo\
+        --partition $partition \
         --beta 0.5 \
-        --logdir './logs/' \
+        --logdir "./logs/" \
         --noise 0 \
         --sample $sample \
         --init_seed 0 \
-        --exp_title "alg: $alg"
+        --exp_title "${alg}_bs_1024"
 done
 
 

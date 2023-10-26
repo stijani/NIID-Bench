@@ -115,6 +115,7 @@ class LocalUpdate(object):
         global_model_clone = copy.deepcopy(self.net)
         global_model_clone.train()
         images, labels = next(iter(self.unbiased_train_dataloader))
+        # print("###########################", len(labels))
         images, labels = images.to(self.device), labels.to(self.device)
         global_model_clone.zero_grad()
         log_probs = global_model_clone(images)
@@ -142,6 +143,9 @@ class LocalUpdate(object):
         for step in range(self.num_local_steps):
             # loop through the data for number of local steps
             images, labels = next(trainloader)
+            ##############################
+            #create_img_tiles_from_data_batch(images, labels)
+            ##############################
             images, labels = images.to(self.device), labels.to(self.device)
             self.net.zero_grad()
             log_probs = self.net(images)

@@ -11,6 +11,7 @@ import random
 from sklearn.metrics import confusion_matrix
 from torch.utils.data import DataLoader
 import copy
+from PIL import Image, ImageDraw, ImageFont
 
 from model import *
 from datasets import MNIST_truncated, CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom, SVHN_custom, FashionMNIST_truncated, CustomTensorDataset, CelebA_custom, FEMNIST, Generated, genData
@@ -19,7 +20,7 @@ from math import sqrt
 import torch.nn as nn
 
 import torch.optim as optim
-import torchvision.utils as vutils
+from torchvision.utils import make_grid
 import time
 import random
 
@@ -869,4 +870,20 @@ def stringify_args(args):
     return "_".join(arg_pairs)
 
 
+def create_img_tiles_from_data_batch(imgs, labels, save_path="./sample_images/sample_batch.png", nrow=4, padding=10, font_size=16):
+    grid = make_grid(imgs, nrow=nrow, padding=padding)
+    grid = transforms.ToPILImage()(grid)
+
+    draw = ImageDraw.Draw(grid)
+    # font = ImageFont.truetype("arial.ttf", font_size)
+    font = ImageFont.load_default()
+
+    for i, label in enumerate(labels):
+        row = i // nrow
+        col = i % nrow
+        x = col * (imgs.size(-1) + padding)
+        y = (row + 1) * (imgs.size(-2) + padding)
+        draw.text((x, y), str(label.item()), font=font, fill="white")
+
+    grid.save(save_path)
 
