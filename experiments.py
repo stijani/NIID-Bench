@@ -299,6 +299,8 @@ def init_nets(net_configs, dropout_p, n_parties, args):
                     net = ResNet50_cifar10()
                 elif args.model == "vgg16":
                     net = vgg16()
+                elif args.model == "lenet":
+                    net = LeNet()
                 else:
                     print("not supported yet")
                     exit(1)
@@ -579,7 +581,7 @@ if __name__ == "__main__":
                 for idx in selected:
                     nets[idx].load_state_dict(global_para)
 
-            all_clients_unbiased_step_grads = global_train_net_gradiance(
+            trained_state_dicts, all_clients_unbiased_step_grads = global_train_net_gradiance(
                 nets,
                 selected,
                 global_model,
@@ -605,7 +607,8 @@ if __name__ == "__main__":
 
             for idx in range(len(selected)):
                 # net_para = nets[selected[idx]].cpu().state_dict()
-                net_para = nets[selected[idx]].state_dict()
+                # net_para = nets[selected[idx]].state_dict()
+                net_para = trained_state_dicts[selected[idx]]
                 if idx == 0:
                     for key in net_para:
                         global_para[key] = net_para[key] * fed_avg_freqs[idx]

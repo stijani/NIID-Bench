@@ -1,9 +1,9 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
 n_parties=100
-device="cuda:2"
+device="cuda:5"
 sample=0.1
-partition="noniid-#label3"
-model="simple-cnn"
+partition="noniid-#label2"
+model="lenet"
 #model="resnet"
 dataset="cifar10"
 num_local_steps=150
@@ -13,7 +13,7 @@ num_local_steps=150
 for alg in "gradiance"
 do
     python experiments.py \
-        --exp_category benchmarking/cifar10/noniid-#label3/clients_100 \
+        --exp_category benchmarking/cifar10/testing/ \
         --device $device \
         --alg $alg \
         --model $model \
@@ -25,14 +25,14 @@ do
         --n_parties $n_parties \
         --mu 0.01 \
         --rho 0.9 \
-        --comm_round 200 \
+        --comm_round 2 \
         --partition $partition \
         --beta 0.5 \
         --logdir "./logs/" \
         --noise 0 \
         --sample $sample \
         --init_seed 0 \
-        --exp_title "${alg}_bs_1024"
+        --exp_title "$alg | bs_1024"
 done
 
 

@@ -64,7 +64,8 @@ def local_train_net_gradiance(
                         device,
                         logger
                         )
-    net, unbiased_grad_dict = lu.update_weights()
+    # net, unbiased_grad_dict = lu.update_weights()
+    state_dict, unbiased_grad_dict = lu.update_weights()
     # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
     # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
@@ -74,7 +75,7 @@ def local_train_net_gradiance(
     # net.to('cpu')
     logger.info(' ** Training complete **')
     #return train_acc, test_acc, unbiased_grad_dict
-    return unbiased_grad_dict
+    return state_dict, unbiased_grad_dict
 
 
 class LocalUpdate(object):
@@ -105,6 +106,28 @@ class LocalUpdate(object):
         self.logger = logger
         self.criterion = nn.CrossEntropyLoss().to(device)
         
+    # def unbiased_update_step(self):
+    #     """
+    #     Compute unbiased first step update for a client and return the parameters
+    #     :param global_model_clone -> current state of the global model as recieved from server
+    #     :return gradient of the trainable parameters
+    #     """
+    #     #global_model_clone = self.net.clone()
+    #     global_model_clone = copy.deepcopy(self.net)
+    #     global_model_clone.train()
+    #     images, labels = next(iter(self.unbiased_train_dataloader))
+    #     # print("###########################", len(labels))
+    #     images, labels = images.to(self.device), labels.to(self.device)
+    #     global_model_clone.zero_grad()
+    #     log_probs = global_model_clone(images)
+    #     loss = self.criterion(log_probs, labels)
+    #     loss.backward()
+    #     gradients_dict = {} # to stroee grads against layer names
+    #     for name, param in global_model_clone.named_parameters():
+    #         if param.requires_grad:
+    #             gradients_dict[name] = param.grad.clone()
+    #     return gradients_dict
+
     def unbiased_update_step(self):
         """
         Compute unbiased first step update for a client and return the parameters
@@ -112,17 +135,17 @@ class LocalUpdate(object):
         :return gradient of the trainable parameters
         """
         #global_model_clone = self.net.clone()
-        global_model_clone = copy.deepcopy(self.net)
-        global_model_clone.train()
+        #global_model_clone = copy.deepcopy(self.net)
+        self.net.train()
         images, labels = next(iter(self.unbiased_train_dataloader))
         # print("###########################", len(labels))
         images, labels = images.to(self.device), labels.to(self.device)
-        global_model_clone.zero_grad()
-        log_probs = global_model_clone(images)
+        self.net.zero_grad()
+        log_probs = self.net(images)
         loss = self.criterion(log_probs, labels)
         loss.backward()
         gradients_dict = {} # to stroee grads against layer names
-        for name, param in global_model_clone.named_parameters():
+        for name, param in self.net.named_parameters():
             if param.requires_grad:
                 gradients_dict[name] = param.grad.clone()
         return gradients_dict
@@ -160,4 +183,6 @@ class LocalUpdate(object):
         # logger.info('>> Training accuracy: %f' % train_acc)
         # logger.info('>> Test accuracy: %f' % test_acc)
         # logger.info(' ** Training complete **')
-        return self.net, copy.deepcopy(unbiased_grad_dict)
+        state_dict = copy.deepcopy(self.net.state_dict())
+        del self.net
+        return state_dict, copy.deepcopy(unbiased_grad_dict)
