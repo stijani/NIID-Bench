@@ -1,8 +1,8 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
-n_parties=100
-device="cuda:5"
+n_parties=1000
+device="cuda:2"
 sample=0.1
-partition="noniid-#label2"
+partition="noniid-#label1"
 model="lenet"
 #model="resnet"
 dataset="cifar10"
@@ -25,7 +25,7 @@ do
         --n_parties $n_parties \
         --mu 0.01 \
         --rho 0.9 \
-        --comm_round 2 \
+        --comm_round 200 \
         --partition $partition \
         --beta 0.5 \
         --logdir "./logs/" \

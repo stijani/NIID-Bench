@@ -1,5 +1,6 @@
 import torch.optim as optim
 import torch
+import copy
 
 
 class GradianceOptimizer(optim.Optimizer):
@@ -21,4 +22,4 @@ class GradianceOptimizer(optim.Optimizer):
                     # update model weights
                     p.data -= group['lr'] * p.grad.data
                     # update the prior grads
-                    self.prior_grads[idx] = p.grad.data.clone()
+                    self.prior_grads[idx] = copy.deepcopy(p.grad.data)
