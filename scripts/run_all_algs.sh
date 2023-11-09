@@ -1,19 +1,18 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
-n_parties=100
+n_parties=1000
 device="cuda:5"
 sample=0.1
-partition="noniid-#label2"
+partition="noniid-#label3"
 model="lenet"
-#model="resnet"
 dataset="cifar10"
-num_local_steps=150
+comm_round=500
+num_local_steps=50
 # "gradiance" "fedprox" "fedavg" "scaffold" "moon"
-# --exp_category benchmarking/cifar10/$partition/clients_$n_parties \
 
-for alg in "gradiance" "fedprox" "fedavg" "scaffold" "moon"
+for alg in "fedavg" "scaffold"
 do
     python experiments.py \
-        --exp_category benchmarking/cifar10/$partition/clients_100_newest \
+        --exp_category benchmarking/cifar10/$partition/clients_1000_round_500_localsteps_50_manual_update \
         --device $device \
         --alg $alg \
         --model $model \
@@ -25,14 +24,14 @@ do
         --n_parties $n_parties \
         --mu 0.01 \
         --rho 0.9 \
-        --comm_round 200 \
+        --comm_round $comm_round \
         --partition $partition \
         --beta 0.5 \
         --logdir "./logs/" \
         --noise 0 \
         --sample $sample \
         --init_seed 0 \
-        --exp_title "$alg | bs_1024"
+        --exp_title $alg
 done
 
 
