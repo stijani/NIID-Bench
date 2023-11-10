@@ -25,7 +25,7 @@ from algorithms.scaffold.update_global import global_train_net_scaffold
 from algorithms.moon.update_global import global_train_net_moon
 
 from algorithms.fedavg.update_local import local_train_net
-from algorithms.gradiance.utils import get_avg_of_unbiased_grads
+from algorithms.gradiance.utils import get_avg_of_unbiased_grads, average_weights
 
 
 def save_metrics(args, metric, filename="test_acc.csv"):
@@ -575,13 +575,13 @@ if __name__ == "__main__":
                     for idx in selected:
                         nets[idx].load_state_dict(global_para)
                 # set the aggregate unbiased grads to None since it's yet to be computed
-                aggregated_unbiased_grads = None
+                aggregated_unbiased_weights = None
 
             else:
                 for idx in selected:
                     nets[idx].load_state_dict(global_para)
 
-            trained_state_dicts, all_clients_unbiased_step_grads = global_train_net_gradiance(
+            trained_state_dicts, all_clients_unbiased_weights = global_train_net_gradiance(
                 nets,
                 selected,
                 global_model,
@@ -589,12 +589,12 @@ if __name__ == "__main__":
                 net_dataidx_map,
                 test_dl=test_dl_global,
                 device=device,
-                aggregated_unbiased_grads=aggregated_unbiased_grads,
+                aggregated_unbiased_weights=aggregated_unbiased_weights,
                 logger=logger,
             )
             # aggregate and update the unbiased grads
-            aggregated_unbiased_grads = get_avg_of_unbiased_grads(
-                all_clients_unbiased_step_grads
+            aggregated_unbiased_weights = average_weights(
+                all_clients_unbiased_weights
             )
 
             ### global_model.to('cpu')

@@ -1,6 +1,6 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
-n_parties=1000
-device="cuda:5"
+n_parties=100
+device="cuda:3"
 sample=0.1
 partition="noniid-#label3"
 model="lenet"
@@ -9,10 +9,10 @@ comm_round=500
 num_local_steps=50
 # "gradiance" "fedprox" "fedavg" "scaffold" "moon"
 
-for alg in "fedavg" "scaffold"
+for alg in "gradiance"
 do
     python experiments.py \
-        --exp_category benchmarking/cifar10/$partition/clients_1000_round_500_localsteps_50_manual_update \
+        --exp_category benchmarking/cifar10/$partition/testing \
         --device $device \
         --alg $alg \
         --model $model \

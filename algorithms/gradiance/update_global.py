@@ -15,11 +15,11 @@ def global_train_net_gradiance(
     net_dataidx_map,
     test_dl,
     device,
-    aggregated_unbiased_grads=None,
+    aggregated_unbiased_weights=None,
     logger=None
     ):
     trained_state_dicts = {}
-    all_clients_unbiased_step_grads = []
+    all_clients_unbiased_weights = []
     for net_id in nets:
         if net_id not in selected:
             continue
@@ -47,7 +47,7 @@ def global_train_net_gradiance(
             unbiased_train_dl_local, _, _, _ = get_dataloader(args.dataset, args.datadir, 1024, 32, dataidxs, noise_level)
         # train_dl_global, test_dl_global, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 1024)
 
-        trained_state_dict, unbiased_grad_dict = local_train_net_gradiance(net_id, net, global_model, train_dl_local, test_dl, unbiased_train_dl_local, args.num_local_steps, args.lr, args.optimizer, args.mu, args.beta_, aggregated_unbiased_grads, logger, device=device)
-        all_clients_unbiased_step_grads.append(unbiased_grad_dict)
+        trained_state_dict, update_weights_manual = local_train_net_gradiance(net_id, net, global_model, train_dl_local, test_dl, unbiased_train_dl_local, args.num_local_steps, args.lr, args.optimizer, args.mu, args.beta_, aggregated_unbiased_weights, logger, device=device)
+        all_clients_unbiased_weights.append(update_weights_manual)
         trained_state_dicts[net_id] = trained_state_dict
-    return trained_state_dicts, all_clients_unbiased_step_grads
+    return trained_state_dicts, all_clients_unbiased_weights

@@ -38,7 +38,7 @@ def local_train_net_gradiance(
     args_optimizer, 
     mu, 
     beta, 
-    aggregated_unbiased_grads, 
+    aggregated_unbiased_weights, 
     logger, 
     device="cpu"
     ):
@@ -59,13 +59,13 @@ def local_train_net_gradiance(
                         beta, 
                         train_dataloader, 
                         test_dataloader, 
-                        aggregated_unbiased_grads, 
+                        aggregated_unbiased_weights, 
                         unbiased_train_dataloader, 
                         device,
                         logger
                         )
     # net, unbiased_grad_dict = lu.update_weights()
-    state_dict, unbiased_grad_dict = lu.update_weights_manual()
+    state_dict, update_weights_manual = lu.update_weights_manual()
     # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
     # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
@@ -75,7 +75,7 @@ def local_train_net_gradiance(
     # net.to('cpu')
     logger.info(' ** Training complete **')
     #return train_acc, test_acc, unbiased_grad_dict
-    return state_dict, unbiased_grad_dict
+    return state_dict, update_weights_manual
 
 
 class LocalUpdate(object):
@@ -88,7 +88,7 @@ class LocalUpdate(object):
         beta, 
         train_dataloader, 
         test_dataloader, 
-        aggregated_unbiased_grads, 
+        aggregated_unbiased_weights, 
         unbiased_train_dataloader=None, 
         device="cpu", 
         logger=None
@@ -101,7 +101,7 @@ class LocalUpdate(object):
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
         self.unbiased_train_dataloader = unbiased_train_dataloader
-        self.aggregated_unbiased_grads = aggregated_unbiased_grads
+        self.aggregated_unbiased_weights = aggregated_unbiased_weights
         self.device = device
         self.logger = logger
         self.criterion = nn.CrossEntropyLoss().to(device)
@@ -128,37 +128,62 @@ class LocalUpdate(object):
     #             gradients_dict[name] = param.grad.clone()
     #     return gradients_dict
 
+    # def unbiased_update_step(self):
+    #     """
+    #     Compute unbiased first step update for a client and return the parameters
+    #     :param global_model_clone -> current state of the global model as recieved from server
+    #     :return gradient of the trainable parameters
+    #     """
+    #     #global_model_clone = self.net.clone()
+    #     #global_model_clone = copy.deepcopy(self.net)
+    #     self.net.train()
+    #     images, labels = next(iter(self.unbiased_train_dataloader))
+    #     # print("###########################", len(labels))
+    #     images, labels = images.to(self.device), labels.to(self.device)
+    #     self.net.zero_grad()
+    #     log_probs = self.net(images)
+    #     loss = self.criterion(log_probs, labels)
+    #     loss.backward()
+    #     gradients_dict = {} # to stroee grads against layer names
+    #     for name, param in self.net.named_parameters():
+    #         if param.requires_grad:
+    #             gradients_dict[name] = param.grad.clone()
+    #     return gradients_dict
     def unbiased_update_step(self):
         """
         Compute unbiased first step update for a client and return the parameters
         :param global_model_clone -> current state of the global model as recieved from server
         :return gradient of the trainable parameters
         """
-        #global_model_clone = self.net.clone()
-        #global_model_clone = copy.deepcopy(self.net)
+        # global_model_clone = self.net.clone()
+        # global_model_clone = copy.deepcopy(self.net)
+        optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.net.parameters()), lr=self.lr)
         self.net.train()
         images, labels = next(iter(self.unbiased_train_dataloader))
         # print("###########################", len(labels))
         images, labels = images.to(self.device), labels.to(self.device)
         self.net.zero_grad()
+        optimizer.zero_grad()
         log_probs = self.net(images)
         loss = self.criterion(log_probs, labels)
         loss.backward()
-        gradients_dict = {} # to stroee grads against layer names
-        for name, param in self.net.named_parameters():
-            if param.requires_grad:
-                gradients_dict[name] = param.grad.clone()
-        return gradients_dict
+        optimizer.step()
+        # gradients_dict = {} # to stroee grads against layer names
+        # for name, param in self.net.named_parameters():
+        #     if param.requires_grad:
+        #         gradients_dict[name] = param.grad.clone()
+        unbiased_weights = copy.deepcopy(self.net.state_dict())
+        return unbiased_weights
 
     
     def update_weights(self):
         # unbiased update step
-        unbiased_grad_dict = self.unbiased_update_step()
+        unbiased_weights = self.unbiased_update_step()
                
         trainloader = cycle(self.train_dataloader)
         
-        if self.aggregated_unbiased_grads:
-            self.optimizer = GradianceOptimizer(self.net.parameters(), self.aggregated_unbiased_grads, self.lr, self.beta)
+        if self.aggregated_unbiased_weights:
+            self.optimizer = GradianceOptimizer(self.net.parameters(), self.aggregated_unbiased_weights, self.lr, self.beta)
         else:
             self.optimizer = optim.SGD(self.net.parameters(), lr=self.lr)
         self.net.train()
@@ -185,51 +210,63 @@ class LocalUpdate(object):
         # logger.info(' ** Training complete **')
         state_dict = copy.deepcopy(self.net.state_dict())
         del self.net
-        return state_dict, copy.deepcopy(unbiased_grad_dict)
+        return state_dict, copy.deepcopy(unbiased_weights)
     
 
     def update_weights_manual(self):
         # unbiased update step
-        unbiased_grad_dict = self.unbiased_update_step()
+        unbiased_weights = self.unbiased_update_step()
                
         trainloader = cycle(self.train_dataloader)
         
-        if self.aggregated_unbiased_grads:
-            self.optimizer = GradianceOptimizer(self.net.parameters(), self.aggregated_unbiased_grads, self.lr, self.beta)
-        else:
-            self.optimizer = optim.SGD(self.net.parameters(), lr=self.lr)
+        # if self.aggregated_unbiased_weights:
+        #     self.optimizer = GradianceOptimizer(self.net.parameters(), self.aggregated_unbiased_weights, self.lr, self.beta)
+        # else:
+        self.optimizer = optim.SGD(self.net.parameters(), lr=self.lr)
         self.net.train()
         sum_local_loss = 0.0
         trainable_param_names = [name for name, param in self.net.named_parameters() if param.requires_grad]  
         for step in range(self.num_local_steps):
             # loop through the data for number of local steps
             images, labels = next(trainloader)
-            ##############################
             #create_img_tiles_from_data_batch(images, labels)
-            ##############################
             images, labels = images.to(self.device), labels.to(self.device)
             self.net.zero_grad()
+            self.optimizer.step()
             log_probs = self.net(images)
             loss = self.criterion(log_probs, labels)
             loss.backward()
-            ####################################
+            self.optimizer.step()
+            # ###################################
             with torch.no_grad(): # ensures this is not recorded in computational graph
-                new_params_dict = {}
-                for layer_name, layer_param in zip(trainable_param_names, self.net.parameters()):
-                    if not layer_param.requires_grad:
-                        new_params_dict[layer_name] = layer_param
+                #net_param_dict = self.net.parameters()
+                net_param_dict = self.net.state_dict()
+                for layer in trainable_param_names:
+                    if not net_param_dict[layer].requires_grad:
+                        #net_param_dict[layer_name] = net_param_dict[layer]
                         continue
-                    if self.aggregated_unbiased_grads:
-                        layer_grad = self.beta * self.aggregated_unbiased_grads[layer_name] + copy.deepcopy(layer_param.grad)
-                        #layer_grad = self.config['beta'] * aggr_unbiased_grads[layer_name] + (1 - self.config['beta'])*copy.deepcopy(layer_param.grad)
-                        self.aggregated_unbiased_grads[layer_name] = layer_grad 
-                    else: 
-                        layer_grad = layer_param.grad
-                    new_layer_params = layer_param - layer_grad*self.lr
-                    new_params_dict[layer_name] = new_layer_params
-            self.net.load_state_dict(new_params_dict)
-            ####################################
-            # self.optimizer.step()
+                    layer_weights = net_param_dict[layer] + self.beta * aggregated_unbiased_weights[layer]
+                    aggregated_unbiased_weights[layer] = copy.deepcopy(layer_weights)
+                    net_param_dict[layer] = layer_weights
+            self.net.load_state_dict(net_param_dict)
+            # ###################################
+
+            # with torch.no_grad(): # ensures this is not recorded in computational graph
+            #     new_params_dict = {}
+            #     for layer_name, layer_param in zip(trainable_param_names, self.net.parameters()):
+            #         if not layer_param.requires_grad:
+            #             new_params_dict[layer_name] = layer_param
+            #             continue
+            #         if self.aggregated_unbiased_weights:
+            #             layer_grad = self.beta * self.aggregated_unbiased_weights[layer_name] + copy.deepcopy(layer_param.grad)
+            #             #layer_grad = self.config['beta'] * aggr_unbiased_grads[layer_name] + (1 - self.config['beta'])*copy.deepcopy(layer_param.grad)
+            #             self.aggregated_unbiased_weights[layer_name] = layer_grad 
+            #         else: 
+            #             layer_grad = layer_param.grad
+            #         new_layer_params = layer_param - layer_grad*self.lr
+            #         new_params_dict[layer_name] = new_layer_params
+            # self.net.load_state_dict(new_params_dict)
+            # # self.optimizer.step()
             sum_local_loss += loss.item()
         logger.info(f'Client: {self.cliend_idx} | Averaged Local Loss: {round(sum_local_loss/self.num_local_steps, 2)}')
         # train_acc, train_loss = compute_accuracy(self.net, self.train_dataloader, device=self.device)
@@ -240,4 +277,4 @@ class LocalUpdate(object):
         # logger.info(' ** Training complete **')
         state_dict = copy.deepcopy(self.net.state_dict())
         del self.net
-        return state_dict, copy.deepcopy(unbiased_grad_dict)
+        return state_dict, copy.deepcopy(unbiased_weights)
