@@ -4,7 +4,7 @@ import copy
 
 
 class GradianceOptimizer(optim.Optimizer):
-    def __init__(self, params, aggregated_unbiased_grads, lr=0.01, beta=0.99):
+    def __init__(self, params, aggregated_unbiased_grads, lr=0.01, beta=0.9):
         super(GradianceOptimizer, self).__init__(params, {"lr": lr})
         self.beta = beta
         self.prior_grads = list(aggregated_unbiased_grads.values())
