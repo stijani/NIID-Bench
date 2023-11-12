@@ -46,10 +46,10 @@ def train_net_gradiance(
     logger.info('Training network %s' % str(net_id))
     logger.info('n_training: %d' % len(train_dataloader))
     logger.info('n_test: %d' % len(test_dataloader))
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
     criterion = nn.CrossEntropyLoss().to(device)
     cnt = 0 # TODO compare this to local_steps, stop the training loop once cnt == local_steps 
     # global_weight_collector = list(global_net.to(device).parameters())
@@ -67,13 +67,14 @@ def train_net_gradiance(
                         )
     net, unbiased_grad_dict = lu.update_weights()
     #net.to(device) ######################################### works
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
 
     net.to('cpu')
+    train_acc = test_acc = 0.0
     logger.info(' ** Training complete **')
     return train_acc, test_acc, unbiased_grad_dict
 
@@ -187,10 +188,10 @@ class LocalUpdate(object):
             self.optimizer.step()
             sum_local_loss += loss.item()
         logger.info(f'Client: {self.cliend_idx} | Averaged Local Loss: {round(sum_local_loss/self.num_local_steps, 2)}')
-        train_acc, train_loss = compute_accuracy(self.net, self.train_dataloader, device=self.device)
-        test_acc, conf_matrix, test_loss = compute_accuracy(self.net, self.test_dataloader, get_confusion_matrix=True, device=self.device)
+        # train_acc, train_loss = compute_accuracy(self.net, self.train_dataloader, device=self.device)
+        # test_acc, conf_matrix, test_loss = compute_accuracy(self.net, self.test_dataloader, get_confusion_matrix=True, device=self.device)
 
-        logger.info('>> Training accuracy: %f' % train_acc)
-        logger.info('>> Test accuracy: %f' % test_acc)
+        # logger.info('>> Training accuracy: %f' % train_acc)
+        # logger.info('>> Test accuracy: %f' % test_acc)
         logger.info(' ** Training complete **')
         return self.net, copy.deepcopy(unbiased_grad_dict)

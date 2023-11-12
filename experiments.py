@@ -182,11 +182,11 @@ def init_nets(net_configs, dropout_p, n_parties, args):
 def train_net(net_id, net, train_dataloader, test_dataloader, num_local_steps, lr, args_optimizer, device="cpu"):
     logger.info('Training network %s' % str(net_id))
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
 
     if args_optimizer == 'adam':
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=lr, weight_decay=args.reg)
@@ -240,14 +240,15 @@ def train_net(net_id, net, train_dataloader, test_dataloader, num_local_steps, l
         #     logger.info('>> Training accuracy: %f' % train_acc)
         #     logger.info('>> Test accuracy: %f' % test_acc)
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
 
     ### net.to('cpu')
     logger.info(' ** Training complete **')
+    train_acc = test_acc = 0.0
     return train_acc, test_acc
 
 def train_net_fedprox(net_id, net, global_net, train_dataloader, test_dataloader, num_local_steps, lr, args_optimizer, mu, device="cpu"):
@@ -255,11 +256,11 @@ def train_net_fedprox(net_id, net, global_net, train_dataloader, test_dataloader
     logger.info('n_training: %d' % len(train_dataloader))
     logger.info('n_test: %d' % len(test_dataloader))
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
 
 
     if args_optimizer == 'adam':
@@ -308,24 +309,25 @@ def train_net_fedprox(net_id, net, global_net, train_dataloader, test_dataloader
 
     logger.info(f'Client: {net_id} | Averaged Local Loss: {round(sum_local_loss/num_local_steps, 2)}')
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
 
     ### net.to('cpu')
     logger.info(' ** Training complete **')
+    train_acc = test_acc = 0.0
     return train_acc, test_acc
 
 def train_net_scaffold(net_id, net, global_model, c_local, c_global, train_dataloader, test_dataloader, num_local_steps, lr, args_optimizer, device="cpu"):
     logger.info('Training network %s' % str(net_id))
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
 
     if args_optimizer == 'adam':
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=lr, weight_decay=args.reg)
@@ -388,24 +390,25 @@ def train_net_scaffold(net_id, net, global_model, c_local, c_global, train_datal
     c_local.load_state_dict(c_new_para)
 
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
 
     ### net.to('cpu')
     logger.info(' ** Training complete **')
+    train_acc = test_acc = 0.0
     return train_acc, test_acc, c_delta_para
 
 def train_net_fednova(net_id, net, global_model, train_dataloader, test_dataloader, num_local_steps, lr, args_optimizer, device="cpu"):
     logger.info('Training network %s' % str(net_id))
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
 
     optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), lr=lr, momentum=args.rho, weight_decay=args.reg)
     criterion = nn.CrossEntropyLoss().to(device)
@@ -451,14 +454,15 @@ def train_net_fednova(net_id, net, global_model, train_dataloader, test_dataload
     for key in norm_grad:
         #norm_grad[key] = (global_model_para[key] - net_para[key]) / a_i
         norm_grad[key] = torch.true_divide(global_model_para[key]-net_para[key], a_i)
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
 
     ### net.to('cpu')
     logger.info(' ** Training complete **')
+    train_acc = test_acc = 0.0
     return train_acc, test_acc, a_i, norm_grad
 
 
@@ -467,11 +471,11 @@ def train_net_moon(net_id, net, global_net, previous_nets, train_dataloader, tes
 
     logger.info('Training network %s' % str(net_id))
 
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, moon_model=True, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, moon_model=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, moon_model=True, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, moon_model=True, device=device)
 
-    logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
-    logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
+    # logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
+    # logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
 
     # conloss = ContrastiveLoss(temperature)
 
@@ -564,13 +568,14 @@ def train_net_moon(net_id, net, global_net, previous_nets, train_dataloader, tes
         for previous_net in previous_nets:
             ### previous_net.to('cpu')
             pass
-    train_acc, train_loss = compute_accuracy(net, train_dataloader, moon_model=True, device=device)
-    test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, moon_model=True, device=device)
+    # train_acc, train_loss = compute_accuracy(net, train_dataloader, moon_model=True, device=device)
+    # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, moon_model=True, device=device)
 
-    logger.info('>> Training accuracy: %f' % train_acc)
-    logger.info('>> Test accuracy: %f' % test_acc)
+    # logger.info('>> Training accuracy: %f' % train_acc)
+    # logger.info('>> Test accuracy: %f' % test_acc)
     ### net.to('cpu')
     logger.info(' ** Training complete **')
+    train_acc = test_acc = 0.0
     return train_acc, test_acc
 
 
