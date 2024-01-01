@@ -1,9 +1,12 @@
+import sys
 from math import *
 from model import *
 from utils import *
 from vggmodel import *
 from resnetcifar import *
 from algorithms.moon.update_local import local_train_net_moon
+sys.path.append('/home/stijani/projects/phd/paper-2/phd-paper2-code/modules')
+from custom_image_dataset import CustomImageDataset
 
 
 def global_train_net_moon(
@@ -29,30 +32,32 @@ def global_train_net_moon(
         )
         net.to(device)
 
-        noise_level = args.noise
-        if net_id == args.n_parties - 1:
-            noise_level = 0
+        # noise_level = args.noise
+        # if net_id == args.n_parties - 1:
+        #     noise_level = 0
 
-        if args.noise_type == "space":
-            train_dl_local, test_dl_local, _, _ = get_dataloader(
-                args.dataset,
-                args.datadir,
-                args.batch_size,
-                32,
-                dataidxs,
-                noise_level,
-                net_id,
-                args.n_parties - 1,
-            )
-        else:
-            noise_level = args.noise / (args.n_parties - 1) * net_id
-            train_dl_local, test_dl_local, _, _ = get_dataloader(
-                args.dataset, args.datadir, args.batch_size, 32, dataidxs, noise_level
-            )
-        train_dl_global, test_dl_global, _, _ = get_dataloader(
-            args.dataset, args.datadir, args.batch_size, 32
-        )
-        n_epoch = args.epochs
+        # if args.noise_type == "space":
+        #     train_dl_local, test_dl_local, _, _ = get_dataloader(
+        #         args.dataset,
+        #         args.datadir,
+        #         args.batch_size,
+        #         32,
+        #         dataidxs,
+        #         noise_level,
+        #         net_id,
+        #         args.n_parties - 1,
+        #     )
+        # else:
+        #     noise_level = args.noise / (args.n_parties - 1) * net_id
+        #     train_dl_local, test_dl_local, _, _ = get_dataloader(
+        #         args.dataset, args.datadir, args.batch_size, 32, dataidxs, noise_level
+        #     )
+        # train_dl_global, test_dl_global, _, _ = get_dataloader(
+        #     args.dataset, args.datadir, args.batch_size, 32
+        # )
+        # n_epoch = args.epochs
+
+        train_dl_local = DataLoader(CustomImageDataset(net_dataidx_map[net_id], args.dataset, args.use_aug), batch_size=args.batch_size, shuffle=True)
 
         prev_models = []
         for i in range(len(prev_model_pool)):

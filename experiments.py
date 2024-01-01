@@ -67,6 +67,9 @@ def get_args():
         "--partition", type=str, default="homo", help="the data partitioning strategy"
     )
     parser.add_argument(
+        "--niid", type=int, default=0, help="number of unique labels per client, 0 means iid"
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=64,
@@ -211,6 +214,18 @@ def get_args():
         type=float,
         default=1,
         help="Sample ratio for each communication comm_round",
+    )
+    parser.add_argument(
+        "--use_aug",
+        type=bool,
+        default=True,
+        help="whether to use data augmentation",
+    )
+    parser.add_argument(
+        "--local_data_path",
+        type=str,
+        default="/home/stijani/projects/dataset",
+        help="path where local copies of datasets are loaded",
     )
     args = parser.parse_args()
     return args
@@ -372,86 +387,108 @@ if __name__ == "__main__":
     torch.manual_seed(seed)
     random.seed(seed)
     logger.info("Partitioning data")
-    (
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        net_dataidx_map,
-        traindata_cls_counts,
-    ) = partition_data(
-        args.dataset,
-        args.datadir,
-        args.logdir,
-        args.partition,
-        args.n_parties,
-        beta=args.beta,
-    )
+    # (
+    #     X_train,
+    #     y_train,
+    #     X_test,
+    #     y_test,
+    #     net_dataidx_map,
+    #     traindata_cls_counts,
+    # ) = partition_data(
+    #     args.dataset,
+    #     args.datadir,
+    #     args.logdir,
+    #     args.partition,
+    #     args.n_parties,
+    #     beta=args.beta,
+    # )
 
-    n_classes = len(np.unique(y_train))
+    # n_classes = len(np.unique(y_train))
 
-    train_dl_global, test_dl_global, train_ds_global, test_ds_global = get_dataloader(
-        args.dataset, args.datadir, args.batch_size, 32
-    )
+    ############################################
+    net_dataidx_map = {}
+    train_feature_pth = os.path.join(args.local_data_path, args.dataset, 'train_features.npy')
+    train_lab_pth = os.path.join(args.local_data_path, args.dataset, 'train_labels.npy')
+    test_feature_pth = os.path.join(args.local_data_path, args.dataset, 'test_features.npy')
+    test_lab_pth = os.path.join(args.local_data_path, args.dataset, 'test_labels.npy')
+    train_dataset_dict, test_dl_global, n_classes, all_train_y = get_data_partition(args,
+                                                                                    train_feature_pth,
+                                                                                    train_lab_pth,
+                                                                                    test_feature_pth,
+                                                                                    test_lab_pth
+                                                                                    )
+    # net_dataidx_map = train_dataset_dict
+
+    # modify the key in data partition to conform with nets
+    for idx, key in enumerate(train_dataset_dict.keys()):
+        net_dataidx_map[idx] = train_dataset_dict[key]
+        # print("############", idx)
+
+    # traindata_cls_counts = record_net_data_stats(all_train_y, net_dataidx_map, args.logdir)
+    ############################################
+
+    # train_dl_global, test_dl_global, train_ds_global, test_ds_global = get_dataloader(
+    #     args.dataset, args.datadir, args.batch_size, 32
+    # )
 
     # print("len train_dl_global:", len(train_ds_global))
-    logger.info(f"len train_dl_global: {len(train_ds_global)}")
+    # logger.info(f"len train_dl_global: {len(train_ds_global)}")
 
-    data_size = len(test_ds_global)
+    # data_size = len(test_ds_global)
 
     # test_dl = data.DataLoader(dataset=test_ds_global, batch_size=32, shuffle=False)
 
-    train_all_in_list = []
-    test_all_in_list = []
-    if args.noise > 0:
-        for party_id in range(args.n_parties):
-            dataidxs = net_dataidx_map[party_id]
+    # train_all_in_list = []
+    # test_all_in_list = []
+    # if args.noise > 0:
+    #     for party_id in range(args.n_parties):
+    #         dataidxs = net_dataidx_map[party_id]
 
-            noise_level = args.noise
-            if party_id == args.n_parties - 1:
-                noise_level = 0
+    #         noise_level = args.noise
+    #         if party_id == args.n_parties - 1:
+    #             noise_level = 0
 
-            if args.noise_type == "space":
-                (
-                    train_dl_local,
-                    test_dl_local,
-                    train_ds_local,
-                    test_ds_local,
-                ) = get_dataloader(
-                    args.dataset,
-                    args.datadir,
-                    args.batch_size,
-                    32,
-                    dataidxs,
-                    noise_level,
-                    party_id,
-                    args.n_parties - 1,
-                )
-            else:
-                noise_level = args.noise / (args.n_parties - 1) * party_id
-                (
-                    train_dl_local,
-                    test_dl_local,
-                    train_ds_local,
-                    test_ds_local,
-                ) = get_dataloader(
-                    args.dataset,
-                    args.datadir,
-                    args.batch_size,
-                    32,
-                    dataidxs,
-                    noise_level,
-                )
-            train_all_in_list.append(train_ds_local)
-            test_all_in_list.append(test_ds_local)
-        train_all_in_ds = data.ConcatDataset(train_all_in_list)
-        train_dl_global = data.DataLoader(
-            dataset=train_all_in_ds, batch_size=args.batch_size, shuffle=True
-        )
-        test_all_in_ds = data.ConcatDataset(test_all_in_list)
-        test_dl_global = data.DataLoader(
-            dataset=test_all_in_ds, batch_size=32, shuffle=False
-        )
+    #         if args.noise_type == "space":
+    #             (
+    #                 train_dl_local,
+    #                 test_dl_local,
+    #                 train_ds_local,
+    #                 test_ds_local,
+    #             ) = get_dataloader(
+    #                 args.dataset,
+    #                 args.datadir,
+    #                 args.batch_size,
+    #                 32,
+    #                 dataidxs,
+    #                 noise_level,
+    #                 party_id,
+    #                 args.n_parties - 1,
+    #             )
+    #         else:
+    #             noise_level = args.noise / (args.n_parties - 1) * party_id
+    #             (
+    #                 train_dl_local,
+    #                 test_dl_local,
+    #                 train_ds_local,
+    #                 test_ds_local,
+    #             ) = get_dataloader(
+    #                 args.dataset,
+    #                 args.datadir,
+    #                 args.batch_size,
+    #                 32,
+    #                 dataidxs,
+    #                 noise_level,
+    #             )
+    #         train_all_in_list.append(train_ds_local)
+    #         test_all_in_list.append(test_ds_local)
+    #     train_all_in_ds = data.ConcatDataset(train_all_in_list)
+    #     train_dl_global = data.DataLoader(
+    #         dataset=train_all_in_ds, batch_size=args.batch_size, shuffle=True
+    #     )
+    #     test_all_in_ds = data.ConcatDataset(test_all_in_list)
+    #     test_dl_global = data.DataLoader(
+    #         dataset=test_all_in_ds, batch_size=32, shuffle=False
+    #     )
 
     if args.alg == "fedavg":
         logger.info("Initializing nets")
@@ -513,8 +550,8 @@ if __name__ == "__main__":
                         global_para[key] += net_para[key] * fed_avg_freqs[idx]
             global_model.load_state_dict(global_para)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             global_model.to(device)
             # train_acc, train_loss = compute_accuracy(
@@ -537,6 +574,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
 
         # save metrics to file
         save_metrics(args, test_acc_per_round, filename="test_acc.csv")
@@ -588,6 +626,7 @@ if __name__ == "__main__":
                 args,
                 net_dataidx_map,
                 test_dl=test_dl_global,
+                # test_dl=test,
                 device=device,
                 aggregated_unbiased_grads=aggregated_unbiased_grads,
                 logger=logger,
@@ -617,8 +656,8 @@ if __name__ == "__main__":
                         global_para[key] += net_para[key] * fed_avg_freqs[idx]
             global_model.load_state_dict(global_para)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             global_model.to(device)
             # train_acc, train_loss = compute_accuracy(global_model, train_dl_global, device=device)
@@ -640,6 +679,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
         # save metrics to file
         save_metrics(args, test_acc_per_round, filename="test_acc.csv")
         save_metrics(args, test_loss_per_round, filename="test_loss.csv")
@@ -708,8 +748,8 @@ if __name__ == "__main__":
                         global_para[key] += net_para[key] * fed_avg_freqs[idx]
             global_model.load_state_dict(global_para)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             global_model.to(device)
             # train_acc, train_loss = compute_accuracy(
@@ -732,6 +772,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
 
         # save metrics to file
         save_metrics(args, test_acc_per_round, filename="test_acc.csv")
@@ -809,8 +850,8 @@ if __name__ == "__main__":
                         global_para[key] += net_para[key] * fed_avg_freqs[idx]
             global_model.load_state_dict(global_para)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             global_model.to(device)
             # train_acc, train_loss = compute_accuracy(
@@ -833,6 +874,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
 
         # save metrics to file
         save_metrics(args, test_acc_per_round, filename="test_acc.csv")
@@ -860,12 +902,12 @@ if __name__ == "__main__":
         for key in d_total_round:
             d_total_round[key] = 0
 
-        data_sum = 0
-        for i in range(args.n_parties):
-            data_sum += len(traindata_cls_counts[i])
-        portion = []
-        for i in range(args.n_parties):
-            portion.append(len(traindata_cls_counts[i]) / data_sum)
+        # data_sum = 0
+        # for i in range(args.n_parties):
+        #     data_sum += len(traindata_cls_counts[i])
+        # portion = []
+        # for i in range(args.n_parties):
+        #     portion.append(len(traindata_cls_counts[i]) / data_sum)
 
         global_para = global_model.state_dict()
         if args.is_same_initial:
@@ -941,8 +983,8 @@ if __name__ == "__main__":
                     updated_model[key] -= coeff * d_total_round[key]
             global_model.load_state_dict(updated_model)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             # global_model.to(device)
             # train_acc, train_loss = compute_accuracy(
@@ -965,6 +1007,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
 
         # save metrics to file
         save_metrics(args, test_acc_per_round, filename="test_acc.csv")
@@ -1042,8 +1085,8 @@ if __name__ == "__main__":
                         global_para[key] += net_para[key] * fed_avg_freqs[idx]
             global_model.load_state_dict(global_para)
 
-            logger.info("global n_training: %d" % len(train_dl_global))
-            logger.info("global n_test: %d" % len(test_dl_global))
+            # logger.info("global n_training: %d" % len(train_dl_global))
+            # logger.info("global n_test: %d" % len(test_dl_global))
 
             global_model.to(device)
             # train_acc, train_loss = compute_accuracy(
@@ -1070,6 +1113,7 @@ if __name__ == "__main__":
             logger_custom.info(
                 f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}"
             )
+            print(f"Round: {comm_round} | Elapse Time: {elapsed_time} | Test Acc: {test_acc} | Test Loss: {test_loss}")
 
             old_nets = copy.deepcopy(nets)
             for _, net in old_nets.items():

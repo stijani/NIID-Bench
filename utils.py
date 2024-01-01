@@ -29,6 +29,14 @@ from config import params
 import sklearn.datasets as sk
 from sklearn.datasets import load_svmlight_file
 
+################
+import sys
+sys.path.append('/home/stijani/projects/phd/paper-2/phd-paper2-code/modules')
+from data_sharding.create_private_shards import Shard
+from custom_image_dataset import CustomImageDataset
+
+###############
+
 logging.basicConfig()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -671,7 +679,7 @@ class AddGaussianNoise(object):
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
-def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_level=0, net_id=None, total=0):
+def get_dataloader(dataset, datadir, train_bs, unbiased_bs=1024, dataidxs=None, noise_level=0, net_id=None, total=0):
     if dataset in ('mnist', 'femnist', 'fmnist', 'cifar10', 'svhn', 'generated', 'covtype', 'a9a', 'rcv1', 'SUSY', 'cifar100', 'tinyimagenet'):
         if dataset == 'mnist':
             dl_obj = MNIST_truncated
@@ -784,9 +792,11 @@ def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_lev
             test_ds = dl_obj(datadir, train=False, transform=transform_test, download=True)
 
         train_dl = data.DataLoader(dataset=train_ds, batch_size=train_bs, shuffle=True, drop_last=False)
-        test_dl = data.DataLoader(dataset=test_ds, batch_size=test_bs, shuffle=False, drop_last=False)
+        # test_dl = data.DataLoader(dataset=test_ds, batch_size=test_bs, shuffle=False, drop_last=False)
+        unbiased_dl = data.DataLoader(dataset=train_ds, batch_size=unbiased_bs, shuffle=False, drop_last=False)
 
-    return train_dl, test_dl, train_ds, test_ds
+    # return train_dl, test_dl, train_ds, test_ds
+    return train_dl, unbiased_dl
 
 
 def weights_init(m):
@@ -886,4 +896,30 @@ def create_img_tiles_from_data_batch(imgs, labels, save_path="./sample_images/sa
         draw.text((x, y), str(label.item()), font=font, fill="white")
 
     grid.save(save_path)
+
+def get_data_partition(args,
+                       train_feature_pth,
+                       train_lab_pth,
+                       test_feature_pth,
+                       test_lab_pth
+                       ):
+    # load the datasets from paths
+    X_train = np.load(train_feature_pth)
+    y_train = np.load(train_lab_pth)
+    X_test = np.load(test_feature_pth)
+    y_test = np.load(test_lab_pth)
+    n_classes = len(np.unique(y_train))
+    shards = Shard(list(X_train), list(y_train), args.n_parties)
+
+    # wether to create iid or niid clients
+    niid = args.niid
+    if niid > 0:
+        train_dataset_dict = shards.niid_sharding(niid)
+    else:
+        train_dataset_dict = shards.iid_sharding()
+    test = DataLoader(CustomImageDataset((X_test, y_test), args.dataset, args.use_aug), batch_size=args.batch_size, shuffle=False)
+    all_train_y = {}
+    for k, v in train_dataset_dict.items():
+        all_train_y[k] = v[1]  # get train label per client
+    return train_dataset_dict, test, n_classes, all_train_y
 
