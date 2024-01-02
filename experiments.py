@@ -739,7 +739,8 @@ if __name__ == "__main__":
             ]
 
             for idx in range(len(selected)):
-                net_para = nets[selected[idx]].cpu().state_dict()
+                # net_para = nets[selected[idx]].cpu().state_dict()
+                net_para = nets[selected[idx]].state_dict()
                 if idx == 0:
                     for key in net_para:
                         global_para[key] = net_para[key] * fed_avg_freqs[idx]
