@@ -231,8 +231,105 @@ def get_args():
     return args
 
 
+# def init_nets(net_configs, dropout_p, n_parties, args):
+#     nets = {net_i: None for net_i in range(n_parties)}
+
+#     if args.dataset in {"mnist", "cifar10", "svhn", "fmnist"}:
+#         n_classes = 10
+#     elif args.dataset == "celeba":
+#         n_classes = 2
+#     elif args.dataset == "cifar100":
+#         n_classes = 100
+#     elif args.dataset == "tinyimagenet":
+#         n_classes = 200
+#     elif args.dataset == "femnist":
+#         n_classes = 62
+#     elif args.dataset == "emnist":
+#         n_classes = 47
+#     elif args.dataset in {"a9a", "covtype", "rcv1", "SUSY"}:
+#         n_classes = 2
+#     if args.use_projection_head:
+#         add = ""
+#         if "mnist" in args.dataset and args.model == "simple-cnn":
+#             add = "-mnist"
+#         for net_i in range(n_parties):
+#             net = ModelFedCon(args.model + add, args.out_dim, n_classes, net_configs)
+#             nets[net_i] = net
+#     else:
+#         if args.alg == "moon":
+#             add = ""
+#             if "mnist" in args.dataset and args.model == "simple-cnn":
+#                 add = "-mnist"
+#             for net_i in range(n_parties):
+#                 net = ModelFedCon_noheader(
+#                     args.model + add, args.out_dim, n_classes, net_configs
+#                 )
+#                 nets[net_i] = net
+#         else:
+#             for net_i in range(n_parties):
+#                 if args.dataset == "generated":
+#                     net = PerceptronModel()
+#                 elif args.model == "mlp":
+#                     if args.dataset == "covtype":
+#                         input_size = 54
+#                         output_size = 2
+#                         hidden_sizes = [32, 16, 8]
+#                     elif args.dataset == "a9a":
+#                         input_size = 123
+#                         output_size = 2
+#                         hidden_sizes = [32, 16, 8]
+#                     elif args.dataset == "rcv1":
+#                         input_size = 47236
+#                         output_size = 2
+#                         hidden_sizes = [32, 16, 8]
+#                     elif args.dataset == "SUSY":
+#                         input_size = 18
+#                         output_size = 2
+#                         hidden_sizes = [16, 8]
+#                     net = FcNet(input_size, hidden_sizes, output_size, dropout_p)
+#                 elif args.model == "vgg":
+#                     net = vgg11()
+#                 elif args.model == "simple-cnn":
+#                     if args.dataset in ("cifar10", "cinic10", "svhn"):
+#                         net = SimpleCNN(
+#                             input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=10
+#                         )
+#                     elif args.dataset in ("mnist", "femnist", "fmnist"):
+#                         net = SimpleCNNMNIST(
+#                             input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=10
+#                         )
+#                     elif args.dataset == "celeba":
+#                         net = SimpleCNN(
+#                             input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=2
+#                         )
+#                 elif args.model == "vgg-9":
+#                     if args.dataset in ("mnist", "femnist"):
+#                         net = ModerateCNNMNIST()
+#                     elif args.dataset in ("cifar10", "cinic10", "svhn"):
+#                         # print("in moderate cnn")
+#                         net = ModerateCNN()
+#                     elif args.dataset == "celeba":
+#                         net = ModerateCNN(output_dim=2)
+#                 elif args.model == "resnet":
+#                     net = ResNet50_cifar10()
+#                 elif args.model == "vgg16":
+#                     net = vgg16()
+#                 elif args.model == "lenet":
+#                     net = LeNet()
+#                 else:
+#                     print("not supported yet")
+#                     exit(1)
+#                 nets[net_i] = net
+
+#     model_meta_data = []
+#     layer_type = []
+#     for k, v in nets[0].state_dict().items():
+#         model_meta_data.append(v.shape)
+#         layer_type.append(k)
+#     return nets, model_meta_data, layer_type
+
 def init_nets(net_configs, dropout_p, n_parties, args):
-    nets = {net_i: None for net_i in range(n_parties)}
+    # nets = {net_i: None for net_i in range(n_parties)}
 
     if args.dataset in {"mnist", "cifar10", "svhn", "fmnist"}:
         n_classes = 10
@@ -252,81 +349,83 @@ def init_nets(net_configs, dropout_p, n_parties, args):
         add = ""
         if "mnist" in args.dataset and args.model == "simple-cnn":
             add = "-mnist"
-        for net_i in range(n_parties):
-            net = ModelFedCon(args.model + add, args.out_dim, n_classes, net_configs)
-            nets[net_i] = net
+        # for net_i in range(n_parties):
+        net = ModelFedCon(args.model + add, args.out_dim, n_classes, net_configs)
+        # nets[net_i] = net
     else:
         if args.alg == "moon":
             add = ""
             if "mnist" in args.dataset and args.model == "simple-cnn":
                 add = "-mnist"
-            for net_i in range(n_parties):
-                net = ModelFedCon_noheader(
-                    args.model + add, args.out_dim, n_classes, net_configs
-                )
-                nets[net_i] = net
+            # for net_i in range(n_parties):
+            net = ModelFedCon_noheader(
+                args.model + add, args.out_dim, n_classes, net_configs
+            )
+            # nets[net_i] = net
         else:
-            for net_i in range(n_parties):
-                if args.dataset == "generated":
-                    net = PerceptronModel()
-                elif args.model == "mlp":
-                    if args.dataset == "covtype":
-                        input_size = 54
-                        output_size = 2
-                        hidden_sizes = [32, 16, 8]
-                    elif args.dataset == "a9a":
-                        input_size = 123
-                        output_size = 2
-                        hidden_sizes = [32, 16, 8]
-                    elif args.dataset == "rcv1":
-                        input_size = 47236
-                        output_size = 2
-                        hidden_sizes = [32, 16, 8]
-                    elif args.dataset == "SUSY":
-                        input_size = 18
-                        output_size = 2
-                        hidden_sizes = [16, 8]
-                    net = FcNet(input_size, hidden_sizes, output_size, dropout_p)
-                elif args.model == "vgg":
-                    net = vgg11()
-                elif args.model == "simple-cnn":
-                    if args.dataset in ("cifar10", "cinic10", "svhn"):
-                        net = SimpleCNN(
-                            input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=10
-                        )
-                    elif args.dataset in ("mnist", "femnist", "fmnist"):
-                        net = SimpleCNNMNIST(
-                            input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=10
-                        )
-                    elif args.dataset == "celeba":
-                        net = SimpleCNN(
-                            input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=2
-                        )
-                elif args.model == "vgg-9":
-                    if args.dataset in ("mnist", "femnist"):
-                        net = ModerateCNNMNIST()
-                    elif args.dataset in ("cifar10", "cinic10", "svhn"):
-                        # print("in moderate cnn")
-                        net = ModerateCNN()
-                    elif args.dataset == "celeba":
-                        net = ModerateCNN(output_dim=2)
-                elif args.model == "resnet":
-                    net = ResNet50_cifar10()
-                elif args.model == "vgg16":
-                    net = vgg16()
-                elif args.model == "lenet":
-                    net = LeNet()
-                else:
-                    print("not supported yet")
-                    exit(1)
-                nets[net_i] = net
+            # for net_i in range(n_parties):
+            if args.dataset == "generated":
+                net = PerceptronModel()
+            elif args.model == "mlp":
+                if args.dataset == "covtype":
+                    input_size = 54
+                    output_size = 2
+                    hidden_sizes = [32, 16, 8]
+                elif args.dataset == "a9a":
+                    input_size = 123
+                    output_size = 2
+                    hidden_sizes = [32, 16, 8]
+                elif args.dataset == "rcv1":
+                    input_size = 47236
+                    output_size = 2
+                    hidden_sizes = [32, 16, 8]
+                elif args.dataset == "SUSY":
+                    input_size = 18
+                    output_size = 2
+                    hidden_sizes = [16, 8]
+                net = FcNet(input_size, hidden_sizes, output_size, dropout_p)
+            elif args.model == "vgg":
+                net = vgg11()
+            elif args.model == "simple-cnn":
+                if args.dataset in ("cifar10", "cinic10", "svhn"):
+                    net = SimpleCNN(
+                        input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=10
+                    )
+                elif args.dataset in ("mnist", "femnist", "fmnist"):
+                    net = SimpleCNNMNIST(
+                        input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=10
+                    )
+                elif args.dataset == "celeba":
+                    net = SimpleCNN(
+                        input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=2
+                    )
+            elif args.model == "vgg-9":
+                if args.dataset in ("mnist", "femnist"):
+                    net = ModerateCNNMNIST()
+                elif args.dataset in ("cifar10", "cinic10", "svhn"):
+                    # print("in moderate cnn")
+                    net = ModerateCNN()
+                elif args.dataset == "celeba":
+                    net = ModerateCNN(output_dim=2)
+            elif args.model == "resnet":
+                net = ResNet50_cifar10()
+            elif args.model == "vgg16":
+                net = vgg16()
+            elif args.model == "lenet":
+                net = LeNet()
+            else:
+                print("not supported yet")
+                exit(1)
+            # nets[net_i] = net
 
     model_meta_data = []
     layer_type = []
-    for k, v in nets[0].state_dict().items():
+    # for k, v in nets[0].state_dict().items():
+    for k, v in net.state_dict().items():
         model_meta_data.append(v.shape)
         layer_type.append(k)
-    return nets, model_meta_data, layer_type
+    return net, model_meta_data, layer_type
+    # return net, model_meta_data, layer_type
 
 
 def view_image(train_dataloader):
@@ -492,18 +591,18 @@ if __name__ == "__main__":
 
     if args.alg == "fedavg":
         logger.info("Initializing nets")
-        nets, local_model_meta_data, layer_type = init_nets(
+        net, local_model_meta_data, layer_type = init_nets(
             args.net_config, args.dropout_p, args.n_parties, args
         )
-        global_models, global_model_meta_data, global_layer_type = init_nets(
+        global_model, global_model_meta_data, global_layer_type = init_nets(
             args.net_config, 0, 1, args
         )
-        global_model = global_models[0]
+        # global_model = global_models[0]
 
         global_para = global_model.state_dict()
         if args.is_same_initial:
-            for net_id, net in nets.items():
-                net.load_state_dict(global_para)
+            # for net_id, net in nets.items():
+            net.load_state_dict(global_para)
 
         test_acc_per_round, test_loss_per_round = [], []
 
@@ -519,13 +618,13 @@ if __name__ == "__main__":
             if comm_round == 0:
                 if args.is_same_initial:
                     for idx in selected:
-                        nets[idx].load_state_dict(global_para)
+                        net.load_state_dict(global_para)
             else:
-                for idx in selected:
-                    nets[idx].load_state_dict(global_para)
+                #for idx in selected:
+                net.load_state_dict(global_para)
 
-            global_train_net(
-                nets,
+            trained_state_dicts = global_train_net(
+                net,
                 selected,
                 args,
                 net_dataidx_map,
@@ -541,7 +640,8 @@ if __name__ == "__main__":
             ]
 
             for idx in range(len(selected)):
-                net_para = nets[selected[idx]].cpu().state_dict()
+                net_para = trained_state_dicts[selected[idx]]
+
                 if idx == 0:
                     for key in net_para:
                         global_para[key] = net_para[key] * fed_avg_freqs[idx]
@@ -584,19 +684,19 @@ if __name__ == "__main__":
 
     elif args.alg == "gradiance":
         logger.info("Initializing nets")
-        nets, local_model_meta_data, layer_type = init_nets(
+        net, local_model_meta_data, layer_type = init_nets(
             args.net_config, args.dropout_p, args.n_parties, args
         )
-        global_models, global_model_meta_data, global_layer_type = init_nets(
+        global_model, global_model_meta_data, global_layer_type = init_nets(
             args.net_config, 0, 1, args
         )
-        global_model = global_models[0]
+        # global_model = global_models[0]
 
         global_para = global_model.state_dict()
 
         if args.is_same_initial:
-            for net_id, net in nets.items():
-                net.load_state_dict(global_para)
+            #for net_id, net in nets.items():
+            net.load_state_dict(global_para)
 
         test_acc_per_round, test_loss_per_round = [], []
         for comm_round in range(args.comm_round):
@@ -610,17 +710,17 @@ if __name__ == "__main__":
             global_para = global_model.state_dict()
             if comm_round == 0:
                 if args.is_same_initial:
-                    for idx in selected:
-                        nets[idx].load_state_dict(global_para)
+                    #for idx in selected:
+                    net.load_state_dict(global_para)
                 # set the aggregate unbiased grads to None since it's yet to be computed
                 aggregated_unbiased_grads = None
 
             else:
                 for idx in selected:
-                    nets[idx].load_state_dict(global_para)
+                    net.load_state_dict(global_para)
 
             trained_state_dicts, all_clients_unbiased_step_grads = global_train_net_gradiance(
-                nets,
+                net,
                 selected,
                 global_model,
                 args,

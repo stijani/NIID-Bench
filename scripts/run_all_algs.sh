@@ -1,5 +1,5 @@
 # run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
-n_parties=100
+n_parties=1000
 device="cuda:3"
 sample=0.1
 niid=1
@@ -14,10 +14,9 @@ root="/home/stijani/projects/phd/paper-2/phd-paper2-code/NIID-Bench/exp_metrics"
 # plots
 plot_title="Test-Accuracy-vs-Comms-Round"  
 
-# "gradiance" "fedprox" "fedavg" "scaffold" "moon"
-# --exp_category benchmarking/cifar10/$partition/clients_$n_parties \
-
-for alg in "fedprox" "fednova" #"gradiance" "fedavg" #"fedprox" "fednova" "scaffold"
+# for alg in "fedprox" "fednova" #"gradiance" "fedavg" #"fedprox" "fednova" "scaffold"
+#for alg in "gradiance" "fedavg" "fedprox" "scaffold" "fednova"
+for alg in "fedavg"
 do
     python experiments.py \
         --exp_category $output_path \
@@ -27,14 +26,13 @@ do
         --dataset $dataset \
         --lr 0.01 \
         --beta_ $beta_ \
-        --batch-size 32 \
+        --batch-size 10 \
         --num_local_steps $num_local_steps \
         --n_parties $n_parties \
         --mu 0.01 \
         --rho 0.9 \
         --comm_round 1000 \
         --niid $niid \
-        --beta 0.9 \
         --logdir "./logs/" \
         --noise 0 \
         --sample $sample \

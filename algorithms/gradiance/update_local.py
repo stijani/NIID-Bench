@@ -66,6 +66,7 @@ def local_train_net_gradiance(
                         )
     # net, unbiased_grad_dict = lu.update_weights()
     state_dict, unbiased_grad_dict = lu.update_weights()
+    del net
     # train_acc, train_loss = compute_accuracy(net, train_dataloader, device=device)
     # test_acc, conf_matrix, test_loss = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
