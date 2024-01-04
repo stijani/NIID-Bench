@@ -224,7 +224,6 @@ def get_args():
     parser.add_argument(
         "--local_data_path",
         type=str,
-        default="/home/stijani/projects/dataset",
         help="path where local copies of datasets are loaded",
     )
     args = parser.parse_args()

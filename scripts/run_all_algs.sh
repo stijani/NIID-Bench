@@ -1,24 +1,25 @@
-# run: ./scripts/run_all_algs.sh > /dev/null 2>&1 &
-n_parties=100
-device="cuda:3"
-sample=0.1
-niid=1
+current_directory=$(pwd)
+n_parties=10
+device="cuda:7"
+sample=1
+niid=0
 model="lenet"
-#model="resnet"
 dataset="cifar10"
 num_local_steps=10
 beta_=0.9
 output_path=benchmarking/cifar10/niid-$niid/clients_$n_parties
-root="/home/stijani/projects/phd/paper-2/phd-paper2-code/NIID-Bench/exp_metrics"
+root=$current_directory/exp_metrics
+local_data_path=$HOME/projects/dataset
+plot_title="Test-Accuracy-vs-Comms-Round"
 
-# plots
-plot_title="Test-Accuracy-vs-Comms-Round"  
 
-# "gradiance" "fedprox" "fedavg" "scaffold" "moon"
-# --exp_category benchmarking/cifar10/$partition/clients_$n_parties \
-
-for alg in "fedprox" "fednova" #"gradiance" "fedavg" #"fedprox" "fednova" "scaffold"
+#for alg in "gradiance" "fedavg" "fedprox" "fednova" "scaffold"
+for alg in "scaffold"
 do
+    python get_dataset.py \
+        --root_dir $local_data_path \
+        --datasetname $dataset
+
     python experiments.py \
         --exp_category $output_path \
         --device $device \
@@ -39,8 +40,8 @@ do
         --noise 0 \
         --sample $sample \
         --init_seed 0 \
-        --exp_title $alg
-        #--partition $partition \
+        --exp_title $alg \
+        --local_data_path $local_data_path
 
     python visualization.py \
         --plot_title $plot_title \

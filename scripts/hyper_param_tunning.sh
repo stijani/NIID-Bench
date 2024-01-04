@@ -25,7 +25,8 @@ do
       --noise 0 \
       --sample 0.1 \
       --init_seed 0 \
-      --exp_title "num_local_steps_$num_local_steps"
+      --exp_title "num_local_steps_$num_local_steps" \
+      --local_data_path "/home/stijani/projects/dataset"
       #--partition $partition \
 done
 #done
