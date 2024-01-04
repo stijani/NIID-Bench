@@ -708,4 +708,20 @@ class LeNet(nn.Module):
         #x = F.log_softmax(x, dim=1)
 
         return x
+    
+class MLP(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features=28 * 28 * 1, out_features=200)
+        self.fc2 = nn.Linear(in_features=200, out_features=200)
+        self.out = nn.Linear(in_features=200, out_features=10)
+
+    def forward(self, x):
+        x = x.flatten(start_dim=1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.out(x)
+
+        return x
 

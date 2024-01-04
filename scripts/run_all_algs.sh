@@ -1,13 +1,15 @@
 current_directory=$(pwd)
-n_parties=10
+n_parties=1000
 device="cuda:7"
-sample=1
-niid=0
-model="lenet"
-dataset="cifar10"
+sample=0.1
+niid=1
+# batch_size=32 # for 10 and 100 clients
+batch_size=10 # only for 1000 clients runs
+model=mlp #"lenet"
+dataset=mnist #"cifar10"
 num_local_steps=10
 beta_=0.9
-output_path=benchmarking/cifar10/niid-$niid/clients_$n_parties
+output_path=benchmarking/$dataset/niid-$niid/clients_$n_parties
 root=$current_directory/exp_metrics
 local_data_path=$HOME/projects/dataset
 plot_title="Test-Accuracy-vs-Comms-Round"
@@ -28,7 +30,7 @@ do
         --dataset $dataset \
         --lr 0.01 \
         --beta_ $beta_ \
-        --batch-size 32 \
+        --batch-size $batch_size \
         --num_local_steps $num_local_steps \
         --n_parties $n_parties \
         --mu 0.01 \
