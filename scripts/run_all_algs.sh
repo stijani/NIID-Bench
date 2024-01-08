@@ -1,12 +1,12 @@
 current_directory=$(pwd)
 n_parties=1000
-device="cuda:7"
+device="cuda:5"
 sample=0.1
 niid=1
-# batch_size=32 # for 10 and 100 clients
-batch_size=10 # only for 1000 clients runs
-model=mlp #"lenet"
-dataset=mnist #"cifar10"
+batch_size=10 # for 10 and 100 clients
+#batch_size=10 # only for 1000 clients runs
+model="lenet"
+dataset="cifar10"
 num_local_steps=10
 beta_=0.9
 output_path=benchmarking/$dataset/niid-$niid/clients_$n_parties
@@ -15,8 +15,8 @@ local_data_path=$HOME/projects/dataset
 plot_title="Test-Accuracy-vs-Comms-Round"
 
 
-#for alg in "gradiance" "fedavg" "fedprox" "fednova" "scaffold"
-for alg in "scaffold"
+for alg in "gradiance" "fedavg" "fedprox" "fednova" "scaffold"
+#for alg in "scaffold"
 do
     python get_dataset.py \
         --root_dir $local_data_path \
