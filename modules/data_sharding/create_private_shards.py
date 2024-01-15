@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import sys
-from data_sharding.helper import shuffle_pairwise, create_subarrays
+from modules.data_sharding.helper import shuffle_pairwise, create_subarrays
 
 
 class Shard:
