@@ -3,7 +3,7 @@ n_parties=1000
 device="cuda:5"
 sample=0.1
 niid=1
-batch_size=10 # for 10 and 100 clients
+batch_size=32 #10 # for 10 and 100 clients
 #batch_size=10 # only for 1000 clients runs
 model="lenet"
 dataset="cifar10"
@@ -15,6 +15,7 @@ local_data_path=$HOME/projects/dataset
 plot_title="Test-Accuracy-vs-Comms-Round"
 
 
+# for alg in "fedavg" "scaffold"
 for alg in "gradiance" "fedavg" "fedprox" "fednova" "scaffold"
 #for alg in "scaffold"
 do
